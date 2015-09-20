@@ -30,6 +30,7 @@ script:
   - mkdir tmp_for_test
   - cd tmp_for_test
   # Run the tests
+  - python ../$REPO_DIR/test.py
   - cd ..
 before_deploy:
 - cd $REPO_DIR/dist
