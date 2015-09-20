@@ -1,0 +1,43 @@
+language:
+- objective-c
+env:
+  global:
+  - BUILD_COMMIT='latest-tag'  # comment out to build version in submodule
+  - REPO_DIR=python-gnureadline
+  matrix:
+  - VERSION=2.7.10
+  - VERSION=3.3.5
+  - VERSION=3.4.3
+  - VERSION=3.5.0
+install:
+  - source terryfy/travis_tools.sh
+  - get_python_environment macpython $VERSION venv
+  - pip install delocate
+  - if [ -n "$BUILD_COMMIT" ]; then
+        checkout_commit $REPO_DIR $BUILD_COMMIT;
+    fi
+  - cd $REPO_DIR
+  - python setup.py bdist_wheel
+  - delocate-listdeps dist/*.whl # lists library dependencies
+  - delocate-wheel dist/*.whl # copies library dependencies into wheel
+  - delocate-addplat --rm-orig -x 10_9 -x 10_10 dist/*.whl
+  - pip install dist/*.whl
+  - cd ..
+script:
+  # install dependencies for tests e.g - pip install nose
+  - mkdir tmp_for_test
+  - cd tmp_for_test
+  # Run the tests
+  - cd ..
+before_deploy:
+- cd $REPO_DIR/dist
+# Fix for https://github.com/travis-ci/travis-ci/issues/4635
+- rvm 1.9.3 do gem install net-ssh -v 2.9.2
+deploy:
+  provider: cloudfiles
+  username: travis-worker
+  api_key:
+    secure: "Dt/jfmPXs3sGdPEBPDj/n1a64bSHu3vXRqF8T8O+P9aZipVPA3uSVfe2KkDdPrA9dq94jb8uhmJ1Qllod2g3S5vsVjkhvDKh/2cUX+Efx0plOsEUlIpCTIkSsMJlpwlBFIMPhT4K2p9W1GGb5ZTIO/rh7reW3bye9Zpz4aGb5MOXoD/s0lQV4gIlaXPGKYv9kXHtCs1aCJQ+XUAgWeQOZW8UDIs0RSN2QlOcqU5HgL0LekdukHkBjTu9n6pZ1LXY6OhqdH/ha0bW2EXPy15vc9hyKHb3I+zin5vJRu3VfMIUwu5A5R7zDGjbF2bsVg3KpTVqz/hX0nBCG6bqO38y7GP52gKvBrjDkOKdBygiEi9q09fp7ld2kmM67rHPSl9gnIkIfOEbWth+eE/qI3nTebjTq83xejP1Zf9ofPt4Lc9G/l/G5DgGLh4HKsJ8vNB+jKCKhgJ6fgxZUIGclKn0N6qMfawA1qPjFkViRlqWxS8HeDrFfyEiGxE26vf7Xd+//Lz6OK+dczIdEOc1qebu5K5eXpF33gtZEptXDsh0Jt0zwJTEt7MVnZ8N/kauWjHGDxRPE3fUI5CehnkY07XTeLYntW75F4WaqH5fsNA/udHW6azVcXXSKmIBiWC+Za9aYbSdaaaH/G7RwWcC20a+FZ1Z2xznfs5cD2Cth/VyZGo="
+  region: ORD
+  container: wheels
+  skip_cleanup: true
