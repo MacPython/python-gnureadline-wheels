@@ -2,7 +2,7 @@ env:
     global:
         - REPO_DIR=python-gnureadline
         # Commit from your-project that you want to build
-        - BUILD_COMMIT="8c03e1ab6336dd36b421df990f735d76974209ca"
+        - BUILD_COMMIT="v6.3.8"
         # pip dependencies to _build_ your project
         # - BUILD_DEPENDS="Cython numpy"
         # pip dependencies to _test_ your project.  Include any dependencies
