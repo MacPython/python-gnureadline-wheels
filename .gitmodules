@@ -1,9 +1,6 @@
 [submodule "python-gnureadline"]
 	path = python-gnureadline
 	url = git://github.com/ludwigschwardt/python-gnureadline.git
-[submodule "terryfy"]
-	path = terryfy
-	url = git://github.com/MacPython/terryfy.git
 [submodule "multibuild"]
 	path = multibuild
 	url = https://github.com/matthew-brett/multibuild.git
