@@ -1,46 +1,125 @@
-language:
-- objective-c
 env:
-  global:
-  - BUILD_COMMIT='latest-tag'  # comment out to build version in submodule
-  - REPO_DIR=python-gnureadline
-  matrix:
-  - VERSION=2.7.10
-  - VERSION=3.3.5
-  - VERSION=3.4.3
-  - VERSION=3.5.0
+    global:
+        - REPO_DIR=python-gnureadline
+        # Commit from your-project that you want to build
+        - BUILD_COMMIT="8c03e1ab6336dd36b421df990f735d76974209ca"
+        # pip dependencies to _build_ your project
+        # - BUILD_DEPENDS="Cython numpy"
+        # pip dependencies to _test_ your project.  Include any dependencies
+        # that you need, that are also specified in BUILD_DEPENDS, this will be
+        # a separate install.
+        # - TEST_DEPENDS="numpy scipy pytest"
+        - PLAT=x86_64
+        - UNICODE_WIDTH=32
+        - WHEELHOUSE_UPLOADER_USERNAME=travis-worker
+        # Following generated with
+        # travis encrypt -r your-org/your-project-wheels WHEELHOUSE_UPLOADER_SECRET=<the api key>
+        # This is for Rackspace uploads.  Contact Matthew Brett, or the
+        # scikit-learn team, for # permission (and the API key) to upload to
+        # the Rackspace account used here, or use your own account.
+        - secure:
+            "gDqaQOSYt0Czcw02BMA31ghDhSmvrUEq7hY7RDKwBz7WaBavyz1GsOedQlmAMiJcoup/iqS8mKXYg0ckEm0L2B9BlFdmZECfdV79LTjTePgg/8aDOFar5bydic4RvDCdUlVOe13hGWe69/sxcDaQEvganDCV8OjOpXOpK4SKqydz8rDAQc85w/W92qQWTOFg7zn1YYRtZCmpNhELinRqRy6GUEOYvXlPZUS7o28ASfRRAWHd1qNqIBIpFNZFA0BDPDnsE1m6SsKLD7PgjnFPjPY5WUhMQTfXA235MpXS96A93z2B4QtRPdg6BKik6q9reCiWtnPfTk16sEQo8YDPtMiORJzjixCUo3wpsv+M3fTGIfLzlOhWLbRsK/HLjKHE8z2By1TkqW++F3zva+UehCUTnQMzZA17NrerNWu87XaFHrRJITqDeekx5lINBt+33jUXPWlgGBlMGtKAwgKbD+JjI+TmMXPZSvBywfM8nesQGgeey/tzFXkGuMTSNmgiPSqumkEMUq08ydllkiH62OPkEgOe4Q4+Q2hFSQNhkeXdlEY2l2PBNPzJJtAkN4tUeRUS5FKPTrpNWfsbxKTGm/1FiysZhosoPMHBFI4IneZJlf3b7b2MXVOIyhhAVlH2hsqzXVLbCs4UonTeyqvhWg6hol3xltxP70h+4lR0bjc="
+
+language: python
+# The travis Python version is unrelated to the version we build and test
+# with.  This is set with the MB_PYTHON_VERSION variable.
+python: 3.5
+sudo: required
+dist: trusty
+services: docker
+
+matrix:
+  exclude:
+    # Exclude the default Python 3.5 build
+    - python: 3.5
+  include:
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=2.6
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=2.6
+        - PLAT=i686
+    - os: linux
+      env: MB_PYTHON_VERSION=2.7
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=2.7
+        - UNICODE_WIDTH=16
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=2.7
+        - PLAT=i686
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=2.7
+        - PLAT=i686
+        - UNICODE_WIDTH=16
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.3
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.3
+        - PLAT=i686
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.4
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.4
+        - PLAT=i686
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.5
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.5
+        - PLAT=i686
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.6
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.6
+        - PLAT=x86_64
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=2.7
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.4
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.5
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.6
+
+before_install:
+    - source multibuild/common_utils.sh
+    - source multibuild/travis_steps.sh
+    - before_install
+
 install:
-  - source terryfy/travis_tools.sh
-  - get_python_environment macpython $VERSION venv
-  - pip install delocate
-  # Update to latest wheel package for Python 3.5
-  - pip install -U wheel
-  - if [ -n "$BUILD_COMMIT" ]; then
-        checkout_commit $REPO_DIR $BUILD_COMMIT;
-    fi
-  - cd $REPO_DIR
-  - python setup.py bdist_wheel
-  - delocate-listdeps dist/*.whl # lists library dependencies
-  - delocate-wheel dist/*.whl # copies library dependencies into wheel
-  - delocate-addplat --rm-orig -x 10_9 -x 10_10 dist/*.whl
-  - pip install dist/*.whl
-  - cd ..
+    # Maybe get and clean and patch source
+    - clean_code $REPO_DIR $BUILD_COMMIT
+    - build_wheel $REPO_DIR $PLAT
+
 script:
-  # install dependencies for tests e.g - pip install nose
-  - mkdir tmp_for_test
-  - cd tmp_for_test
-  # Run the tests
-  - python ../$REPO_DIR/test.py
-  - cd ..
-before_deploy:
-- cd $REPO_DIR/dist
-# Fix for https://github.com/travis-ci/travis-ci/issues/4635
-- rvm 1.9.3 do gem install net-ssh -v 2.9.2
-deploy:
-  provider: cloudfiles
-  username: travis-worker
-  api_key:
-    secure: "Dt/jfmPXs3sGdPEBPDj/n1a64bSHu3vXRqF8T8O+P9aZipVPA3uSVfe2KkDdPrA9dq94jb8uhmJ1Qllod2g3S5vsVjkhvDKh/2cUX+Efx0plOsEUlIpCTIkSsMJlpwlBFIMPhT4K2p9W1GGb5ZTIO/rh7reW3bye9Zpz4aGb5MOXoD/s0lQV4gIlaXPGKYv9kXHtCs1aCJQ+XUAgWeQOZW8UDIs0RSN2QlOcqU5HgL0LekdukHkBjTu9n6pZ1LXY6OhqdH/ha0bW2EXPy15vc9hyKHb3I+zin5vJRu3VfMIUwu5A5R7zDGjbF2bsVg3KpTVqz/hX0nBCG6bqO38y7GP52gKvBrjDkOKdBygiEi9q09fp7ld2kmM67rHPSl9gnIkIfOEbWth+eE/qI3nTebjTq83xejP1Zf9ofPt4Lc9G/l/G5DgGLh4HKsJ8vNB+jKCKhgJ6fgxZUIGclKn0N6qMfawA1qPjFkViRlqWxS8HeDrFfyEiGxE26vf7Xd+//Lz6OK+dczIdEOc1qebu5K5eXpF33gtZEptXDsh0Jt0zwJTEt7MVnZ8N/kauWjHGDxRPE3fUI5CehnkY07XTeLYntW75F4WaqH5fsNA/udHW6azVcXXSKmIBiWC+Za9aYbSdaaaH/G7RwWcC20a+FZ1Z2xznfs5cD2Cth/VyZGo="
-  region: ORD
-  container: wheels
-  skip_cleanup: true
+    - install_run $PLAT
+
+after_success:
+    # Upload wheels to Rackspace container
+    - pip install wheelhouse-uploader
+    # This uploads the wheels to a Rackspace container owned by the
+    # scikit-learn team, available at http://wheels.scipy.org.  See above
+    # for information on using this account or choosing another.
+    - python -m wheelhouse_uploader upload --local-folder
+        ${TRAVIS_BUILD_DIR}/wheelhouse/
+        --no-update-index
+        wheels
