@@ -2,7 +2,7 @@ env:
     global:
         - REPO_DIR=python-gnureadline
         # Commit from your-project that you want to build
-        - BUILD_COMMIT="v6.3.8"
+        - BUILD_COMMIT="v8.0.0"
         # pip dependencies to _build_ your project
         # - BUILD_DEPENDS="Cython numpy"
         # pip dependencies to _test_ your project.  Include any dependencies
@@ -23,23 +23,16 @@ env:
 language: python
 # The travis Python version is unrelated to the version we build and test
 # with.  This is set with the MB_PYTHON_VERSION variable.
-python: 3.5
+python: 3.7
 sudo: required
-dist: trusty
+dist: xenial
 services: docker
 
 matrix:
   exclude:
-    # Exclude the default Python 3.5 build
-    - python: 3.5
+    # Exclude the default Python 3.7 build
+    - python: 3.7
   include:
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.6
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.6
-        - PLAT=i686
     - os: linux
       env: MB_PYTHON_VERSION=2.7
     - os: linux
@@ -48,13 +41,16 @@ matrix:
         - PLAT=i686
     - os: linux
       env:
-        - MB_PYTHON_VERSION=3.4
-    - os: linux
-      env:
         - MB_PYTHON_VERSION=3.5
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.6
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.7
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.8-dev
     - os: osx
       language: generic
       env:
@@ -67,6 +63,10 @@ matrix:
       language: generic
       env:
         - MB_PYTHON_VERSION=3.6
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.7
 
 before_install:
     - source multibuild/common_utils.sh
